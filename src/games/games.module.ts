@@ -19,8 +19,8 @@ import { ConfigType } from '@nestjs/config';
             inject: [config.KEY],
             useFactory: (configService: ConfigType<typeof config>) => ({
               store: redisStore,
-              host: configService.host, 
-              port: +configService.port,
+              host: configService.host || "localhost", 
+              port: +configService.port || 5003,
               isGlobal : true,
             })
           }),
