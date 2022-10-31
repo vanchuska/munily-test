@@ -1,42 +1,87 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, NotFoundException, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, CacheInterceptor, Controller, Delete, Get, HttpException, HttpStatus, NotFoundException, Param, Patch, Post, Query, UseInterceptors } from '@nestjs/common';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { GamesService } from './games.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
+import {  Inject, CACHE_MANAGER  } from '@nestjs/common';
+// import Cache from 'cache-manager';
+import { Cache } from 'cache-manager';
 
 @Controller('games')
+// @UseInterceptors(CacheInterceptor)  // para realizarlo de fomra automatica
 export class GamesController {
 
-    constructor(private readonly gamesService : GamesService){}
+    constructor(private readonly gamesService : GamesService,
+        @Inject(CACHE_MANAGER) private cacheManager: Cache){}
+    
 
     @Get()
-    findAll (@Query() paginationQuery : PaginationQueryDto) {
+   async findAll (@Query() paginationQuery : PaginationQueryDto) {
         const {limit,offset} = paginationQuery;
-        return this.gamesService.findAll(paginationQuery);
+        const data = await this.cacheManager.get('all');
+        console.log(data);
+        if(data) {
+          return { 
+            data: data,
+            dataFrom: 'Redis Cache'
+          }
+        }
+
+        if(!data){
+            const nuData = await this.gamesService.findAll(paginationQuery);
+            await this.cacheManager.set('all',nuData , { ttl: 30 });
+            return {
+              data:nuData, 
+              dataFrom: 'mongoDB'
+          }
+        }
+
+        // return this.gamesService.findAll(paginationQuery);
     } 
 
     @Get(':id')
-    findOne (@Param('id') id:string) {
-       return this.gamesService.findOne(id);        
+    async findOne (@Param('id') id:string) {
+        const data = await this.cacheManager.get(id);
+        if(data) {
+          return { 
+            data: data,
+            dataFrom: 'Redis Cache'
+          }
+        }
+        if(!data){
+            const nuData = await this.gamesService.findOne(id) ;
+            await this.cacheManager.set(id,nuData , { ttl: 30 })
+            return {
+              data:nuData, 
+              dataFrom: 'mongoDB'
+          }
+        }
     }
 
     
     @Post()
     create (@Body() creategameedto : CreateGameDto) {
-        console.log(creategameedto instanceof CreateGameDto)
+        // console.log(creategameedto instanceof CreateGameDto)
         return this.gamesService.create(creategameedto);
     }
 
     @Patch(':id')
-    update (@Param('id') id:string, @Body() updateGameDto : UpdateGameDto) {
-        // return `probando un patch . ${id} este es el id `;
-        return this.gamesService.update(id,updateGameDto);
+    async update (@Param('id') id:string, @Body() updateGameDto : UpdateGameDto) {
+        const updatedData = this.gamesService.update(id,updateGameDto)
+        const data = await this.cacheManager.get(id);
+        if(data) {
+            await this.cacheManager.set(id,updatedData , { ttl: 30 })
+        }
+        return updatedData ;
     }
 
     
     @Delete(':id')
-    remove (@Param('id') id:string) {
-        // return `probando un remove. ${id} este es el id `;
+    async remove (@Param('id') id:string) {
+        const data = await this.cacheManager.get(id);
+        if(data) {
+            this.cacheManager.del(id);
+        }
         return this.gamesService.remove(id);
     }
 

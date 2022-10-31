@@ -22,7 +22,7 @@ findAll(paginationQuery : PaginationQueryDto){
 async findOne(id : string){
     const game = await this.gameModel.findOne({_id :id}).exec();
     if (!game){
-        throw new NotFoundException(`el cafe #${id} no se encuentra`);
+        throw new NotFoundException(`The Game whit #${id} not found.`);
     }
     return game;
 }
@@ -35,7 +35,7 @@ create(createGameDto : CreateGameDto){
 async update(id : string , updateGameDto : UpdateGameDto){
     const existingGame = await  this.gameModel.findOneAndUpdate({ _id: id }, {$set : updateGameDto},{ new : true}).exec();
     if(!existingGame){
-        throw new NotFoundException(`el cafe #${id} no se encuentra`);
+        throw new NotFoundException(`The Game whit #${id} not found.`);
     }
    return existingGame; 
 }
