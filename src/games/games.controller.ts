@@ -4,11 +4,13 @@ import { GamesService } from './games.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import {  Inject, CACHE_MANAGER  } from '@nestjs/common';
-// import Cache from 'cache-manager';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Cache } from 'cache-manager';
 
+
+@ApiTags('Games')
 @Controller('games')
-// @UseInterceptors(CacheInterceptor)  // para realizarlo de fomra automatica
+// @UseInterceptors(CacheInterceptor)  // para realizar el uso de cache de fomra automatica
 export class GamesController {
 
     constructor(private readonly gamesService : GamesService,
