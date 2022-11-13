@@ -26,6 +26,7 @@ const document = SwaggerModule.createDocument(app, config);
 
 // URL API
 SwaggerModule.setup('docs', app, document);
+app.enableCors();
   await app.listen(+process.env.PORT || 7000);
 }
 bootstrap();

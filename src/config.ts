@@ -4,5 +4,6 @@ export default registerAs('config', () => {
   return {
     port: process.env.REDIS_PORT,
     host: process.env.REDIS_HOST,
+    mongoUri: process.env.MONGO_URL,
   };
 });
