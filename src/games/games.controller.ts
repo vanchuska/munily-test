@@ -7,7 +7,7 @@ import {  Inject, CACHE_MANAGER  } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Cache } from 'cache-manager';
 
-
+import {MongoIdPipe} from './../common/mongo-id/mongo-id.pipe'
 @ApiTags('Games')
 @Controller('games')
 // @UseInterceptors(CacheInterceptor)  // para realizar el uso de cache de fomra automatica
@@ -42,7 +42,7 @@ export class GamesController {
     } 
 
     @Get(':id')
-    async findOne (@Param('id') id:string) {
+    async findOne (@Param('id', MongoIdPipe ) id:string) {
         const data = await this.cacheManager.get(id);
         if(data) {
           return { 
@@ -68,7 +68,7 @@ export class GamesController {
     }
 
     @Patch(':id')
-    async update (@Param('id') id:string, @Body() updateGameDto : UpdateGameDto) {
+    async update (@Param('id', MongoIdPipe) id:string, @Body() updateGameDto : UpdateGameDto) {
         const updatedData = this.gamesService.update(id,updateGameDto)
         const data = await this.cacheManager.get(id);
         if(data) {
@@ -79,7 +79,7 @@ export class GamesController {
 
     
     @Delete(':id')
-    async remove (@Param('id') id:string) {
+    async remove (@Param('id', MongoIdPipe) id:string) {
         const data = await this.cacheManager.get(id);
         if(data) {
             this.cacheManager.del(id);

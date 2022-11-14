@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -18,19 +19,30 @@ export class UsersService {
     return newUser.save();
   }
 
-  findAll() {
-    return `This action returns all users`;
+  findAll(paginationQuery : PaginationQueryDto) {
+    const {limit,offset} = paginationQuery;
+    return this.usersModel.find().skip(offset).limit(limit).exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+  async findOne(id : string){
+    const user = await this.usersModel.findOne({_id :id}).exec();
+    if (!user){
+        throw new NotFoundException(`The user whit #${id} not found.`);
+    }
+    return user;
+}
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+async update(id : string , updateUserDto : UpdateUserDto){
+  const existingUser = await  this.usersModel.findOneAndUpdate({ _id: id }, {$set : updateUserDto},{ new : true}).exec();
+  if(!existingUser){
+      throw new NotFoundException(`The user whit #${id} not found.`);
   }
+ return existingUser; 
+}
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  }
+
+async remove(id : string){
+  const user  = await this.findOne(id)
+  return user.remove();
+}
 }
