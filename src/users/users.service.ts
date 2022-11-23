@@ -21,7 +21,7 @@ export class UsersService {
 
   findAll(paginationQuery : PaginationQueryDto) {
     const {limit,offset} = paginationQuery;
-    return this.usersModel.find().skip(offset).limit(limit).exec();
+    return this.usersModel.find().populate('games').skip(offset).limit(limit).exec();
   }
 
   async findOne(id : string){
